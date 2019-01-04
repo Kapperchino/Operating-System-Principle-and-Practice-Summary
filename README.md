@@ -16,3 +16,7 @@
 12. [Storage Devices](Chapter12.md)
 13. [Files and Directories](Chapter13.md)
 14. [Reliable Storage](Chapter14,md)
+# Contributions
+This grabage project needs a lot of help, so far my spelling has been consistently wrong and my explanations are also pretty bad. Please send help. 
+## How to contribute
+Just fork it and submit a pull request, and I'll probably approve it.
