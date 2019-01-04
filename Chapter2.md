@@ -1,3 +1,8 @@
+# Sub Chapters
+- [The Process Abstraction](#the-process-abstraction)
+- [Duel-mode Operation](#dual-mode-operation)
+- [Types of Mode Transfer](#types-of-mode-transfer)
+- [Implementing Safe Mode Transfer](#implementing-safe-mode-transfer)
 # The Process Abstaction
 ### What is a Process?
 Abstraction of a program with it's own memory running in the os.
@@ -55,4 +60,24 @@ The kernel switches to a differnt process, and saves the old process's state in 
 ### User-level upcall
 User programs with the ability to receive async notification of events.
 # Implementing Safe Mode Transfer
+The context switch needs to implement the following.
+### Limited entry into the kernel
+Must ensure entry point into the kernel is one set up by the kernel.
+### Atomic changes to processor state
+The mode, program counter, stack, and memeory protection should all be changed at the same time.
+### Transparent, restartable execution
+The operating must be able to restore the state of the user program exactly as it was before the interruption.
+## Interrupt Vector Table
+The OS must take differnt actions depening on the interrupt, how does the processor know what code to run?
+![alt text](https://www.andrew.cmu.edu/course/15-412/ln/inttable.jpg "Interrupt Vector Table")
+### Interrupt Vector Table
+An array of pointers, with each entry pointing to the frist instruction of a differnt handler procedure in the kernel.
+### Interrupt Handler
+Procedure called by the kernel on an interrupt.
+## Interrupt Stack
+
+
+
+
+
 
