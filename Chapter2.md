@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-# The Process Abstaction
-=======
 # The Process Abstraction
->>>>>>> bb01adbbd2e99119310f02d5a88d974a3014e0a7
 ### What is a Process?
 Abstraction of a program with its own memory running in the os.
 ### How does a program run?
@@ -16,11 +12,7 @@ A process is an instance of a program. Each program can have zero or more proces
 ### Process control block
 Or PCB, it stores all the information of OS needs about a process.
 # Dual-mode operation
-<<<<<<< HEAD
-Single bit in the processer status register that represents the current mode of the processor. There are two modes, user mode and kernal mode.
-=======
 Single bit in the processor status register that represents the current mode of the processor. There are two modes, user mode and kernel mode.
->>>>>>> bb01adbbd2e99119310f02d5a88d974a3014e0a7
 ### User mode
 The processor checks for each instruction to make sure nothing stupid happens.
 ### Kernel mode
@@ -28,7 +20,6 @@ The protections are off and every instructions are trusted.
 ## Privileged Instructions
 Instructions are are available in kernel mode but not in user mode. For example: changing privilege levels, adjusting memory access and such.
 ## Memory Protection
-<<<<<<< HEAD
 To make memory shareing safe, the OS need to configure the hardware so that each application processes can only read and write on its own memeory.
 ### Base and Bound memory protection
 In this approach, a processor has two extra registers, called base and bound. The base specifies the start of the process's memeory region and bound specifies the end of the memeory region. When the process tries to access memeory outside of the base and bounds, the hardware raises an exception. The base and bound can only be changed by privledged instructions.
@@ -55,7 +46,6 @@ A hardware event caused by user program behavior that caused a transfer of contr
 ### System calls
 Any procedure provided by the kernel that can be called from user level. Basically the user asking the kernel to do something. Ususally implemented with a sepcial trap or syscall instruction.  Examples of system calls include connecting to a web server, creating or deleting files, reading or writing data into files and creating a new process.
 ## Kernal to User Mode
-=======
 To make memory sharing safe, the OS need to configure the hardware so that each application processes can only read and write on its own memory.
 ### Base and Bound memory protection
 In this approach, a processor has two extra registers, called base and bound. The base specifies the start of the process's memory region and bound specifies the end of the memory region. When the process tries to access memory outside of the base and bounds, the hardware raises an exception. The base and bound can only be changed by privileged instructions.
@@ -82,22 +72,17 @@ A hardware event caused by user program behavior that caused a transfer of contr
 ### System calls
 Any procedure provided by the kernel that can be called from user level. Basically the user asking the kernel to do something. Usually implemented with a special trap or syscall instruction.  Examples of system calls include connecting to a web server, creating or deleting files, reading or writing data into files and creating a new process.
 ## Kernel to User Mode
->>>>>>> bb01adbbd2e99119310f02d5a88d974a3014e0a7
 ### New process
 The kernel sopies the program into memory, sets the program counter to the first instruction of the process, sets the stack pointer to the base of the user stack, and witches to user mode.
 ### Resume after interrupt, processor exception or syscall
 Resumes execution of the interrupted process by restoring its program counter, register and changes itss mode back to user level.
-<<<<<<< HEAD
 ### Switch to a differnet process
 The kernel switches to a differnt process, and saves the old process's state in the process control block. Then resumes a differnt process by loading its state from the process's control block into the processor then switches to user mode.
 ### User-level upcall
 User programs with the ability to receive async notification of events.
 # Implementing Safe Mode Transfer
-
-=======
 ### Switch to a different process
 The kernel switches to a different process, and saves the old process's state in the process control block. Then resumes a different process by loading its state from the process control block into the processor then switches to user mode.
 ### User-level upcall
 User programs with the ability to receive async notification of events.
 # Implementing Safe Mode Transfer
->>>>>>> bb01adbbd2e99119310f02d5a88d974a3014e0a7
