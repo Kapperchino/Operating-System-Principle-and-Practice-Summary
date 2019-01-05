@@ -100,8 +100,41 @@ The OS must take differnt actions depening on the interrupt, how does the proces
 An array of pointers, with each entry pointing to the frist instruction of a differnt handler procedure in the kernel.
 ### Interrupt Handler
 Procedure called by the kernel on an interrupt.
-
-
+## Interrupt Stack
+Where should the interrupted process's state be store in?
+### Interrupt stack
+A priviledged hardware register pointer to a regoin of kernel memeory. When an interrupt,processor exception or system call trap causes a contexct switch into the kernel, the hardware changes the stack pointer to point to the base of the kernel interrupt stack. Also saves the interrupt process's registers by pushign them onto the interrupt stack before calling the handler.</br>
+When the handler runs, it pushes any remianing registers onto the stack before performing its work. After it is done, the handler pops the saved registers, then the hardware restores the registers it saved, returning to the point where the process was interrupted.
+### Reasons for the interrupt handlers to run on a kernel stack
+#### Reliability
+The process's user-level stack can be an invalid memeory address, but the handler has to work properly.
+#### Security
+User program's stack could be modified by other threads.
+## Two Stack per process
+In most operating systemns, a process has two stacks, one for user code and one for kernel code.
+### Process running in user mode
+its kernel stack is empty and ready to be used for interrupts, processor exceptions and system calls.
+### Process running in kernel mode
+its kernel stack is in use, containing the saves registers from the interrupted user-level computation as well as the current state of the kernel handler.
+### Process waiting for its turn
+its kernel stack contains the registers and state to be restored when the process is resumed.
+### Process waiting for io events to complete
+its kernel stack ocntains the suspended computations to be resumed when the io finishes.
+## Interrupt Masking
+Can an interrupt happen while the kernel is already handling an interrupt?
+### Interrupt disable
+Temporarily defer(mask) delivery of an interrupt until it's safe to do so. 
+### Interrupt enable
+Pending interrupts are delivered to the processor.
+## Hardware Support for Saving and Restoring Registers
+### x86 interrupt process
+- x86 pushes interrupted process stack pointer onto the kernel's interrupt stack and switches to the kernel stack.
+- x86 pushes the interrupted process's intstruction pointer.
+- x86 pushes the x86 processor status word.</br>
+The hardware saves the values for the processor state word before jumping through the interrupt vector table to the interrupt handler.
+### x86 features for restoring state
+- popad: instruction to pop an array of integer register values off the stack into the registers and an iret(return from interrupt) instruction that loads a processor state.
+- pushad: instruction to save the remianing register on to the stack.
 
 
 
