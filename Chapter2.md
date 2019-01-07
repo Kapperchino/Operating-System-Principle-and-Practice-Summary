@@ -3,6 +3,9 @@
 - [Duel-mode Operation](#dual-mode-operation)
 - [Types of Mode Transfer](#types-of-mode-transfer)
 - [Implementing Safe Mode Transfer](#implementing-safe-mode-transfer)
+- [x86 Mode Transfer](#x86-mode-transfer)
+- [Implementing Secure System Calls](#implementing-secure-system-calls)
+- [Starting a new process](#starting-a-new-process)
 # The Process Abstraction
 ### What is a Process?
 Abstraction of a program with its own memory running in the os.
@@ -135,7 +138,90 @@ The hardware saves the values for the processor state word before jumping throug
 ### x86 features for restoring state
 - popad: instruction to pop an array of integer register values off the stack into the registers and an iret(return from interrupt) instruction that loads a processor state.
 - pushad: instruction to save the remianing register on to the stack.
+# x86 Mode Transfer
+## When user-level process is running
+![alt text](/Figures/Chapter2/Figure_2-5-1.png "user-level process diagram")
+## When a processor exception or system call trap occures
+![alt text](/Figures/Chapter2/Figure_2-5-2.png "interrupt diagram")
 
+The hardware saves a small amount of the interrupted thread state
+1. **Mask Interrupts**: Starts by preventing any interrupts from occurring while the processor is switching from user mode to kernel mode.
+2. **Save three key values**: Saves the value of the stack pointer(rsp and ss registers), the execution flags and the instruction pointer(rip and CS registers).
+3. **Switch onto the kernel interrupt stack**: Then switches the stack pointer to the base of the kernel interrupt stack.
+4. **Push the three key values onto the new stack**: Then the hardware stores the internally saved values onto the stack.
+5. **Optionally save an error code**: Certian typess of exceptions, such as page faults, generates an error code to provide more info about the event. For these exceptions, the hardware pushes this code, making it the top item of the stack. For other types of events, the software pushes a dummy value onto the stack instead of the error code.
+6. **Invoke the interrupt handler**: Finally, the hardware changes the code segment/program counter to the address of the interrupt handler procedure.A special register in the processor contains the location of the interrupt vector table in kernel memory. This register can only be modified by ther kernel.
+## When The handler software starts
+![alt text](/Figures/Chapter2/Figure_2-5-3.png "handler diagram")
+1. **Saves the other registers**: The handler pushes the rest of the registers, including the current stack pointer using pushad instruction.
+2. **Handler completes**: Once the handler completes, it can resume the interrupted process. The handler pops the registers it saved on the stack. This restores all the register except the execution flags, program counter, and stack pointer. Uses the popad instruction. Then the handler executes the x86 iret instruction to restore the code segment, program counter, execution flags, stack segment, and stack pointer from the kernel's interrupt stack. This restroes the process to what is was before the interrupt.
+### How the hardware prevents infinite intrrupts
+When the hardware takes an exception to emulate an instruction in the kernel. If the handler returns back the instruction that caused the exception. Another exception would instantly recur. To prevent the infinite loop, the exception handler modifies the program counter stored at the base on the stack to point to the instruction after the one causing the mode switch. The iret instruction can then return to the user process at the correct location. 
+# Implementing Secure System Calls
+The OS kernel constructs a restricted enviorment for process execution to limit the impact of malicous programs. Everytime a process needs to an action outside of its protection domain, it must ask the operating system to do it for them.
+
+System Calls provide an illusion that the kernel is simply a set of library avaliable to user programs. System calls, like interrupts and processor exceptions, share the same mechanism for switching between user and kernel mode. The x86 instruction to trap into the kernel on a syscall is called int.
+
+Inside the kernel, a procedure impelemnts each syscall. This procedure behaves as if the call was made from the kernel, but with differences. The kerenel must implemnt it in a way that protects itself from errors and attacks that can be launched by the misuse of the interfafce. The kernel must assume that the parameters passed to a syscall are intentionally designed to be as malicious as possible.
+### Pair of Stubs
+A pair of procedures that mediate between two enviorments. In this case, between the user enviorment and the kernel. Also mediate procedure calls between computers in a distributed system. 
+
+TODO: Add a diagram
+## Steps involved in a system call
+1. The user program calls the user stub in the normal way
+2. The user stub fills in the code for the syscall and executes the trap instuction
+3. The hardware transfer contorl to the kernel, vectoring to the syscall handler. The handler acts as a stub on the kernel side, copying and checking arguments and then calling the kernel implementation of syscall.
+4. After the syscall completes, it returns to the handler.
+5. The handler returns to user level at the nest instruction in the stub.
+6. The stub returns to the caller.
+
+User level stub example:
+
+```assemblymarkdow
+open:
+    movq #SysCallOpen, %rax
+    #Traps into the kernel
+    int #TrapCode
+    ret
+```
+
+The int instruction saved the program counter, stack pointer, and eflags on the kerenel stack before jumping to the syscall handler thought the interrupt vector table. Also saves other registers. Then examins the syscall integer code in %rax, verifies it is a legal opcode, and calls the correct stub for the syscall.
+
+### Four tasks of the kernel stub
+- **Locate system call arguments**: The arguments to a syscall are stored in the memory, typically on the user stack. IF the syscall has a pointer argument, the stub mnust check the address to verify it is a legal adress within the user domain. If so, the stub converts it to a physical address.
+- **Validate parameters**: The kernel checks for malicious arguments and return an error if it is invalid.
+- **Copy before check**: The kernel copies syscall parameter into kernel memory before performing the checks. It is done to prevent the applicationfrom modifying the parameter after the stub checks the value, but before the parameter is used in the actual implementation of the routine. This is called a time of check vs. time of use attack(TOCTOU).
+- **Copy back any results**: The stub must copy the result from the kernel into user memeory.
+# Starting a new process
+```c
+int KernelStub_Open()
+{
+    char* localCopy[MaxFileNameSize+1];
+    //checks that the stack pointer is valid, and the arguments are stored at valid addrerss
+    if(!validUserAddressRange(userStackPointer,userStackPointer + size of arguments))
+        return error_code;
+    //Fetch pointer to file name from user stack and convert it to a kernel pointer
+    filename = VirtualToKernel(userStackPointer);
+    //Make a local copy of the filename, checks each address in the string before use to make sure it is valid
+    if(!VirtualToKernelStringCopy(filename,localCopy,MaxFileNameSize))
+        return error_code;
+    //Make sure the local copy of the file name is null terminated
+    localCopy[MaxFileNameSize] = 0;
+    //check if the user is permitted to access this file
+    if(!UserFileAccessPermitted(localCopy,current_process))
+        return error_code;
+    //Finally, call the actual routine to open the file.
+    return Kernel_Open(localCopy);
+}
+```
+### How to start running a process
+- Allocate and initialize the process control block.
+- Allocate memory for the process.
+- Copy the program from disk into the newly allocated memory.
+- Allocate a user-level stack for user-level execution.
+- Allocate a kernel-level stack for handling system calls, interrupts and processor exceptions.
+- **Copy arguments into user memory**: kernel copies the file name to a special region in the user process, then the aruguments for the process is stored in the base of user stack.
+- **Transfer control to user mode**: Most Os reuses the same code to exit the kernel for starting a new process and for returning from a system call.When a newe process is created, we allocate a kernel stack to it, and reserve room at the bottom of the kernel stack for the initial values of the user states.
 
 
 
