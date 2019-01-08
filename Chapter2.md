@@ -7,8 +7,8 @@
 - [Implementing Secure System Calls](#implementing-secure-system-calls)
 - [Starting a new process](#starting-a-new-process)
 - [Implementing Upcalls](#implementing-upcalls)
-- [Case Study: Booting an Operating System](#case-study:-booting-an-operating-system)
-- [Case Study: Virtual Machines](#case-study:-virtual-machines)
+- [Case Study: Booting an Operating System](#case-study-booting-an-operating-system)
+- [Case Study: Virtual Machines](#case-study-virtual-machines)
 # The Process Abstraction
 ### What is a Process?
 Abstraction of a program with its own memory running in the os.
