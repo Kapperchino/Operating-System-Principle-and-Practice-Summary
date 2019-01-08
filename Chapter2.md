@@ -262,13 +262,13 @@ Operating system providing the VM.
 The VM OS running inside an OS
 
 TODO: Diagram
-## How Does the host kernel manage mode transfer between guest process and the guest kernel?
+## How Does the guest kernel start a process?
 - The host loads the guest bootloader from the virtual disk and starts it running.
 - THe guest bootloader loads the guest kernel from the virtual disk into the memeory and starts it running.
 - The guest kernel then initializes its interrupt vector table to point to the guest interrupt handlers.
 - The guest kernel loads a process form the virtual dissk into guest memory.
 - To start a process, the guest kernel issues instructions to resume excecution at user level.(Using reti on the x86) Since changing priliege level is a privileged operation, this instruction traps into the host kernel.
-- The host kernel simulates the requested mode transfer as if the processor had directly executed. IT restores the program counter, stack pointer, and processor status word exactly ass the guest operating system had intended.
+- The host kernel simulates the requested mode transfer as if the processor had directly executed. It restores the program counter, stack pointer, and processor status word exactly ass the guest operating system had intended.
 ## How does the guest OS do system calls?
 - The host kernel saves the instruction counter, processor status register, and user stack pointer on the inerrupt stack of the guest operating system.
 - The host kernel transfer control to the guest kernel at the beginning of the interrupt handler, but with guest kernel running with user-mode privilege.
