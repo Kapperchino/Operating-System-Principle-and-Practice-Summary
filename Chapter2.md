@@ -6,6 +6,9 @@
 - [x86 Mode Transfer](#x86-mode-transfer)
 - [Implementing Secure System Calls](#implementing-secure-system-calls)
 - [Starting a new process](#starting-a-new-process)
+- [Implementing Upcalls](#implementing-upcalls)
+- [Case Study: Booting an Operating System](#case-study:-booting-an-operating-system)
+- [Case Study: Virtual Machines](#case-study:-virtual-machines)
 # The Process Abstraction
 ### What is a Process?
 Abstraction of a program with its own memory running in the os.
@@ -222,6 +225,57 @@ int KernelStub_Open()
 - Allocate a kernel-level stack for handling system calls, interrupts and processor exceptions.
 - **Copy arguments into user memory**: kernel copies the file name to a special region in the user process, then the aruguments for the process is stored in the base of user stack.
 - **Transfer control to user mode**: Most Os reuses the same code to exit the kernel for starting a new process and for returning from a system call.When a newe process is created, we allocate a kernel stack to it, and reserve room at the bottom of the kernel stack for the initial values of the user states.
+# Implementing Upcalls
+To allow applications to implement operating system-like functionality, we needto virtualize some of the kernel so that applications can behave more like operating systems.
+### Upcall
+Virtualized interrupts and exceptions. Called signals in UNIX, and asynchronous events in windows.
+## Uses for upcalls
+- **Premptive user-level threads**: An application may run multple tasks, or threads, in a process. A user-level thread package can use a periodic timer upcall as a trigger to switch tasks, to share the processor more evenly.
+- **Async I/O notificaiton**: Most system calls wait til the requestion operation completes then return. 
+### Asynchronous I/O
+A system call starts the request and returns immediatly, later the application can poll the kernel for I/O completion,or a seperate notification can be sent via an upcall to the application when the I/O completes.
+### Interprocesss communication
+A kernel upcall is needed if a process generates an event that needs the instant attention of another process. For example, UNIX sends an upcall to notify a process when the drbugger wants to suspend or resume the process.
+### User-level exception handling
+The OS needs to inform the application when it recieves a processor exception, so the application runtime, rather than the kernel, handles the event.
+### User-level resource allocation
+The operating system must inform the process when its allocation changes. Example: Java garbage collector.
+
+TODO: Diagrams
+## UNIX signals
+- **Types of Signals**: In place of hardware-defined interrupts and processor exceptions, the kernel defines a limited number of signal types that a processor can recieve.
+- **Handlers**: Each process defines its own handlers for each signal type.
+- **Signal stack**: Applications have the option to run UNIX signal handlers on the process's normal execution stack or on a special signal stack allocated by the user process in user memeory.
+- **Signal masking**: UNIX defers signals for events that occur while the signal handler for those types of events is in progress. Instead, the signal is delivered once the handler returns to the kernel.
+- **Processor state**: The signal handler can also modify the saved state, e.g, so that the kernel resume a differnt user-level task when the handler returns.
+# Case Study: Booting an Operating System
+When a computer boots, it sets the machine's program counter to start executing at a pre-determined position in memory. Since the computer is not running, the initial machine instructions must be fetched and executed immediatly after the power is turned on before the system has had a chance to initialize its DRAM. Instead the system uses a special read-only hardware memory called boot ROM. On most x86 computers, the boot program is called the BIOS.
+### Bootloader
+The bios reads a fixed-size block of bytes from a fixed position on disk into memeory. THis block of bytes is called the bootloader.
+### Cryptographic signature
+A specially designed function of the bytes in a file and a private cryptographic key that allows someone with the corresponding public key to verify that an authorized entity produced the file.
+# Case Study: Virtual Machines
+How do interrupts, processor exceptions and system calls work in a VM? 
+### Host operating system
+Operating system providing the VM.
+### Guest operating system
+The VM OS running inside an OS
+
+TODO: Diagram
+## How Does the host kernel manage mode transfer between guest process and the guest kernel?
+- The host loads the guest bootloader from the virtual disk and starts it running.
+- THe guest bootloader loads the guest kernel from the virtual disk into the memeory and starts it running.
+- The guest kernel then initializes its interrupt vector table to point to the guest interrupt handlers.
+- The guest kernel loads a process form the virtual dissk into guest memory.
+- To start a process, the guest kernel issues instructions to resume excecution at user level.(Using reti on the x86) Since changing priliege level is a privileged operation, this instruction traps into the host kernel.
+- The host kernel simulates the requested mode transfer as if the processor had directly executed. IT restores the program counter, stack pointer, and processor status word exactly ass the guest operating system had intended.
+## How does the guest OS do system calls?
+- The host kernel saves the instruction counter, processor status register, and user stack pointer on the inerrupt stack of the guest operating system.
+- The host kernel transfer control to the guest kernel at the beginning of the interrupt handler, but with guest kernel running with user-mode privilege.
+- The guest kernel performs the system call
+- When the guest kernel attempts to return from the system call back to the user level, this causes a processor exception, dropping back into the host kernel.
+- The host kernel can then restore the state of the user process, running at user level, as if the guest OS had been able to return there directly.
+
 
 
 
