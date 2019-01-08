@@ -1,7 +1,7 @@
 # Operating System Principle and Practice Summary
 ## Part 1: Kernals and Processes
-2.  [Kernals and Processes](Chapter2.md)(In progress)
-3.  [The Programming Interface](Chapter3.md)(TODO)
+2.  [Kernals and Processes](Chapter2.md)(Done but need more diagrams)
+3.  [The Programming Interface](Chapter3.md)(In progress)
 ## Part 2: Concurrentcy
 4. [Concurrency](Chapter4.md)(TODO)
 5. [Synchronizing Access to Shared Objects](Chapter5.md)(TODO)
